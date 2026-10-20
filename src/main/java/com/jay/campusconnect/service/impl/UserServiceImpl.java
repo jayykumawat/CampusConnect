@@ -5,6 +5,7 @@ import com.jay.campusconnect.dto.request.UserUpdateRequest;
 import com.jay.campusconnect.dto.response.UserResponse;
 import com.jay.campusconnect.entity.Institution;
 import com.jay.campusconnect.entity.User;
+import com.jay.campusconnect.enums.Role;
 import com.jay.campusconnect.exception.DuplicateResourceException;
 import com.jay.campusconnect.exception.ResourceNotFoundException;
 import com.jay.campusconnect.mapper.UserMapper;
@@ -40,6 +41,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse createUser(UserCreateRequest request) {
+        return createUser(request, request.role());
+    }
+
+    @Override
+    public UserResponse registerStudent(UserCreateRequest request) {
+        return createUser(request, Role.STUDENT);
+    }
+
+    private UserResponse createUser(UserCreateRequest request, Role role) {
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateResourceException(
                     "User already exists with email '" + request.email() + "'"
@@ -47,7 +57,16 @@ public class UserServiceImpl implements UserService {
         }
 
         Institution institution = findInstitution(request.institutionId());
-        User user = userMapper.toEntity(request, institution);
+        UserCreateRequest securedRequest = new UserCreateRequest(
+                request.name(),
+                request.email(),
+                request.password(),
+                role,
+                request.institutionId(),
+                request.classOrYear(),
+                request.department()
+        );
+        User user = userMapper.toEntity(securedRequest, institution);
         user.setPasswordHash(passwordEncoder.encode(request.password()));
 
         User savedUser = userRepository.save(user);

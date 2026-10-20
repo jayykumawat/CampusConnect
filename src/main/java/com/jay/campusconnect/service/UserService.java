@@ -10,6 +10,8 @@ public interface UserService {
 
     UserResponse createUser(UserCreateRequest request);
 
+    UserResponse registerStudent(UserCreateRequest request);
+
     UserResponse getUserById(Long id);
 
     List<UserResponse> getAllUsers();
